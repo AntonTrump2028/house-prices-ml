@@ -1,73 +1,74 @@
-﻿# House Prices Prediction (Ames Housing)
+﻿# House Price Calculator
 
-Учебный ML-проект: от сырых данных Kaggle до Random Forest с честной проверкой.
+ML-powered demo that estimates a home price from basic property details, then optionally shows down payment and monthly mortgage payment.
 
-## Цель
-Предсказать `SalePrice` по признакам дома (Kaggle House Prices — Advanced Regression Techniques).
+Not a live bank API and not live address comps — geo multipliers and interest rates come from static config files (`app/geo_coeffs.json`, `app/rates.json`). The core price comes from a Random Forest trained on the Ames Housing dataset.
 
-## Структура
-```text
-Proj/
-  data/                 # CSV (не в git — скачай с Kaggle)
-  models/               # .joblib (не в git — собери скриптами)
-  plots/                # графики EDA
-  01_load_data.py ... 09_check_model.py
-  data_description.txt
-  requirements.txt
-  README.md
-```
+## Features
 
-## Быстрый старт
-Нужен **Python 3.11**.
+- Web calculator UI (`site/`) — white / blue (`#2B7BBF`)
+- `POST /api/estimate` — price + optional mortgage
+- `GET /api/meta` — countries, cities, default rates, cookie hint (`hp_country`)
+- Country cookie remembered in the browser
+- Best-effort mapping of form fields onto Ames numeric features; missing features filled with train medians
+- Simple buy-date inflation (~0.25%/month, capped)
 
-1. Скачай с Kaggle в `data/`: `train.csv`, `test.csv`
-2. Установи зависимости:
+## Requirements
+
+- Python 3.11
+- Local data: `data/train_clean.csv` (or raw `train.csv` + pipeline scripts)
+- Optional: `models/rf_house_prices_best.joblib` (trained if missing)
+
+## Install
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Прогон пайплайна:
+## Run
 
 ```bash
-python 01_load_data.py
-python 02_missing.py
-python 03_clean.py
-python 04_eda.py
-python 05_linear.py
-python 06_forest.py
-python 07_save_model.py
-python 08_tune_forest.py
-python 09_check_model.py
+python server.py
 ```
 
-## Результаты
-Базовое сравнение (hold-out 20%, `random_state=42`, числовые признаки):
+Open http://127.0.0.1:5000/ in your browser.
 
-| Модель | MAE | RMSE | R2 |
-|--------|-----|------|----|
-| Linear Regression | 19868 | 26501 | 0.870 |
-| Random Forest (100 trees) | 17929 | 24674 | 0.887 |
+API examples:
 
-После тюнинга (`08`): отбор по **valid**, отчёт по **test** (60/20/20):
+```bash
+curl http://127.0.0.1:5000/api/meta
 
-| Модель | MAE | RMSE | R2 |
-|--------|-----|------|----|
-| Random Forest (best, 300 trees) | 17436 | 24518 | 0.889 |
+curl -X POST http://127.0.0.1:5000/api/estimate ^
+  -H "Content-Type: application/json" ^
+  -d "{\"country\":\"PL\",\"city\":\"Warsaw\",\"address\":\"Example 1\",\"buy_date\":\"2026-01-15\",\"living_area\":1400,\"bedrooms\":3,\"year_built\":2008,\"mortgage\":true,\"loan_years\":25,\"down_payment_pct\":20}"
+```
 
-Артефакт: `models/rf_house_prices_best.joblib` (после `08`). Проверка: `09_check_model.py` → `CHECK PASSED`.
+## Regenerate data / model
 
-## Выводы
-- Сильнее всего с ценой связаны `OverallQual` и `GrLivArea`.
-- Random Forest точнее линейной модели.
-- Нельзя оценивать full-data модель на holdout из тех же строк (завышенный R2).
-- Маркер категорий в очистке: `Missing` (не `None`) — иначе pandas снова сделает NaN при чтении CSV.
-- Текстовые признаки пока не в модели — запас для улучшения.
+CSV and large `.joblib` files are gitignored.
 
-## Заметки
-- `LotFrontage` заполняется медианой по всему train до split (мягкая утечка импутации).
-- Если редактор выбрал Python 3.13 без пакетов — запускай через `python3.11`.
+1. Put Kaggle `train.csv` / `test.csv` into `data/`
+2. Run cleaning + training:
 
-## Портфолио-сайт
-Открой site/index.html в браузере (белый + голубой, этапы как стройка дома).
+```bash
+python 03_clean.py
+python 08_tune_forest.py
+```
 
+If `models/rf_house_prices_best.joblib` is absent, `server.py` trains a smaller RF on `data/train_clean.csv` at startup.
+
+## Project layout
+
+```text
+server.py              Flask API + static site
+app/geo_coeffs.json    country/city multipliers
+app/rates.json         default mortgage rates
+site/                  calculator UI
+data/                  CSV (local)
+models/                joblib (local)
+01_*.py … 09_*.py      training / EDA pipeline
+```
+
+## Disclaimer
+
+Estimates are for demonstration only. They are not an appraisal, loan offer, or investment advice.

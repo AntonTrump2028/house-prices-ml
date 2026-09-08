@@ -1,0 +1,43 @@
+﻿{
+  "countries": {
+    "US": {"label": "United States", "currency": "USD", "base": 1.0},
+    "PL": {"label": "Poland", "currency": "PLN", "base": 0.55},
+    "DE": {"label": "Germany", "currency": "EUR", "base": 1.15},
+    "GB": {"label": "United Kingdom", "currency": "GBP", "base": 1.25},
+    "UA": {"label": "Ukraine", "currency": "UAH", "base": 0.28}
+  },
+  "cities": {
+    "US": {
+      "New York": 1.45,
+      "San Francisco": 1.55,
+      "Chicago": 1.05,
+      "Houston": 0.92,
+      "default": 1.0
+    },
+    "PL": {
+      "Warsaw": 1.25,
+      "Krakow": 1.1,
+      "Wroclaw": 1.05,
+      "Gdansk": 1.08,
+      "default": 0.9
+    },
+    "DE": {
+      "Berlin": 1.2,
+      "Munich": 1.4,
+      "Hamburg": 1.15,
+      "default": 1.0
+    },
+    "GB": {
+      "London": 1.5,
+      "Manchester": 1.05,
+      "Birmingham": 1.0,
+      "default": 0.95
+    },
+    "UA": {
+      "Kyiv": 1.2,
+      "Lviv": 1.05,
+      "Odesa": 0.95,
+      "default": 0.85
+    }
+  }
+}

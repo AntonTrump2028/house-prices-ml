@@ -1,4 +1,4 @@
-﻿# data and heavy artifacts (regenerate locally)
+﻿# data and heavy artifacts (regenerate locally — see README)
 data/*.csv
 models/*.joblib
 
