@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Кейс House Prices: предсказание цены дома на Ames Housing — Linear Regression vs Random Forest.">
+  <title>House Prices — портфолио-кейс</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+
+  <header class="nav">
+    <div class="container nav__inner">
+      <a class="nav__brand" href="#">House Prices</a>
+      <a class="nav__link" href="https://github.com/AntonTrump2028/house-prices-ml" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero section">
+      <div class="container">
+        <h1 class="hero__title">Как мы «построили» цену дома</h1>
+        <p class="hero__lead">
+          Задача Ames Housing с Kaggle: по характеристикам участка и дома предсказать продажную цену.
+          Сравнили линейную регрессию и случайный лес — от очистки данных до итоговой оценки.
+        </p>
+        <p class="hero__sub">Ames Housing · Linear Reg vs Random Forest</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#stages">Смотреть этапы</a>
+          <a class="btn btn--secondary" href="https://github.com/AntonTrump2028/house-prices-ml" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="stages section section--soft" id="stages" aria-labelledby="stages-heading">
+      <div class="container">
+        <h2 id="stages-heading" class="section__title">Этапы строительства</h2>
+        <ol class="stages__list">
+          <li class="stage card">
+            <div class="stage__icon" aria-hidden="true">
+              <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 88 H100"/>
+                <path d="M28 88 V78 H40 V88"/>
+                <path d="M52 88 V76 H68 V88"/>
+                <path d="M80 88 V78 H92 V88"/>
+                <path d="M24 88 L24 94 H96 L96 88"/>
+                <path d="M18 94 H102"/>
+              </svg>
+            </div>
+            <div class="stage__body">
+              <p class="stage__num">1. Фундамент</p>
+              <h3 class="stage__title">Данные и очистка</h3>
+              <p class="stage__text">Взяли датасет Ames Housing: пропуски, выбросы, подготовка под обучение — без сюрпризов на валидации.</p>
+            </div>
+          </li>
+          <li class="stage card">
+            <div class="stage__icon" aria-hidden="true">
+              <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M30 90 V48 H90 V90"/>
+                <path d="M24 48 L60 22 L96 48"/>
+                <path d="M42 90 V62 H54 V90"/>
+                <path d="M66 70 H78"/>
+                <path d="M66 78 H78"/>
+                <path d="M48 48 V38"/>
+              </svg>
+            </div>
+            <div class="stage__body">
+              <p class="stage__num">2. Стены</p>
+              <h3 class="stage__title">Признаки, EDA, модели</h3>
+              <p class="stage__text">Распределения, корреляции, категориальные признаки. Линейная регрессия рядом со случайным лесом — где линейной уже не хватает.</p>
+            </div>
+          </li>
+          <li class="stage card">
+            <div class="stage__icon" aria-hidden="true">
+              <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M30 90 V50 H90 V90 Z"/>
+                <path d="M24 50 L60 18 L96 50"/>
+                <path d="M60 18 V28"/>
+                <path d="M48 90 V68 H72 V90"/>
+                <rect x="38" y="58" width="14" height="12"/>
+                <rect x="68" y="58" width="14" height="12"/>
+              </svg>
+            </div>
+            <div class="stage__body">
+              <p class="stage__num">3. Крыша</p>
+              <h3 class="stage__title">Тюнинг и проверка</h3>
+              <p class="stage__text">Гиперпараметры случайного леса, контроль переобучения. MAE, RMSE и R² — выбираем модель, которая держит качество.</p>
+            </div>
+          </li>
+          <li class="stage card">
+            <div class="stage__icon" aria-hidden="true">
+              <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M28 92 V48 H92 V92 Z"/>
+                <path d="M22 48 L60 16 L98 48"/>
+                <path d="M50 92 V70 H70 V92"/>
+                <circle cx="66" cy="82" r="2"/>
+                <rect x="36" y="56" width="12" height="12"/>
+                <rect x="72" y="56" width="12" height="12"/>
+                <rect x="86" y="78" width="22" height="14" rx="2"/>
+                <path d="M92 85 H102"/>
+                <path d="M97 82 V88"/>
+              </svg>
+            </div>
+            <div class="stage__body">
+              <p class="stage__num">4. Ключи / сдача</p>
+              <h3 class="stage__title">Дом готов — смотрим оценку</h3>
+              <p class="stage__text">Модель собрана, метрики посчитаны. Ниже — итоговая «цена» качества на отложенной выборке.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="price section" id="price" aria-labelledby="price-heading">
+      <div class="container">
+        <article class="price-card card">
+          <div class="price-card__head">
+            <h2 id="price-heading" class="section__title section__title--inline">Итоговая оценка</h2>
+            <span class="badge">Best: Random Forest</span>
+          </div>
+          <dl class="metrics">
+            <div class="metric">
+              <dt class="metric__label">MAE</dt>
+              <dd class="metric__value">17&nbsp;436</dd>
+            </div>
+            <div class="metric">
+              <dt class="metric__label">RMSE</dt>
+              <dd class="metric__value">24&nbsp;518</dd>
+            </div>
+            <div class="metric">
+              <dt class="metric__label">R²</dt>
+              <dd class="metric__value">0.889</dd>
+            </div>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <section class="stack section section--soft" aria-labelledby="stack-heading">
+      <div class="container">
+        <h2 id="stack-heading" class="section__title">Стек</h2>
+        <ul class="chips">
+          <li class="chip">Python</li>
+          <li class="chip">pandas</li>
+          <li class="chip">scikit-learn</li>
+          <li class="chip">NumPy</li>
+          <li class="chip">matplotlib</li>
+          <li class="chip">Jupyter</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer section">
+    <div class="container footer__inner">
+      <p class="footer__text">Код и эксперименты — в репозитории на GitHub.</p>
+      <a class="btn btn--primary" href="https://github.com/AntonTrump2028/house-prices-ml" target="_blank" rel="noopener noreferrer">Открыть репозиторий →</a>
+    </div>
+  </footer>
+</body>
+</html>
