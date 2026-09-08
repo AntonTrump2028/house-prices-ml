@@ -1,0 +1,99 @@
+{
+  "geo_coeffs": {
+    "countries": {
+      "Poland": {
+        "label": "Poland",
+        "currency": "PLN",
+        "base": 0.55
+      },
+      "Germany": {
+        "label": "Germany",
+        "currency": "EUR",
+        "base": 1.15
+      },
+      "USA": {
+        "label": "USA",
+        "currency": "USD",
+        "base": 1.0
+      },
+      "Ukraine": {
+        "label": "Ukraine",
+        "currency": "UAH",
+        "base": 0.28
+      },
+      "Other": {
+        "label": "Other",
+        "currency": "USD",
+        "base": 0.85
+      }
+    },
+    "cities": {
+      "Poland": {
+        "Warsaw": 1.25,
+        "Krakow": 1.1,
+        "Wroclaw": 1.05,
+        "Gdansk": 1.08,
+        "default": 0.9
+      },
+      "Germany": {
+        "Berlin": 1.2,
+        "Munich": 1.4,
+        "Hamburg": 1.15,
+        "default": 1.0
+      },
+      "USA": {
+        "New York": 1.45,
+        "San Francisco": 1.55,
+        "Chicago": 1.05,
+        "Houston": 0.92,
+        "default": 1.0
+      },
+      "Ukraine": {
+        "Kyiv": 1.2,
+        "Lviv": 1.05,
+        "Odesa": 0.95,
+        "default": 0.85
+      },
+      "Other": {
+        "default": 1.0
+      }
+    }
+  },
+  "rates": {
+    "Poland": {
+      "annual_rate_pct": 7.5,
+      "currency": "PLN",
+      "symbol": "zl"
+    },
+    "Germany": {
+      "annual_rate_pct": 3.8,
+      "currency": "EUR",
+      "symbol": "€"
+    },
+    "USA": {
+      "annual_rate_pct": 6.8,
+      "currency": "USD",
+      "symbol": "$"
+    },
+    "Ukraine": {
+      "annual_rate_pct": 18.0,
+      "currency": "UAH",
+      "symbol": "₴"
+    },
+    "Other": {
+      "annual_rate_pct": 8.0,
+      "currency": "USD",
+      "symbol": "$"
+    }
+  },
+  "fx_rates": {
+    "base": "USD",
+    "note": "Approx FX vs USD for demo; Ames SalePrice is USD",
+    "to_local": {
+      "USD": 1.0,
+      "EUR": 0.92,
+      "PLN": 4.0,
+      "UAH": 41.0
+    }
+  }
+}
