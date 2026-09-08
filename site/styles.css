@@ -368,14 +368,21 @@ input[readonly] {
 }
 
 .segment__option {
+  position: relative;
   flex: 1;
   cursor: pointer;
 }
 
 .segment__option input {
   position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .segment__option span {
@@ -527,6 +534,11 @@ input[readonly] {
 /* Leaflet tweaks */
 .leaflet-container {
   font: inherit;
+  cursor: crosshair;
+}
+
+.leaflet-container .leaflet-interactive {
+  cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {

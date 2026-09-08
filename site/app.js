@@ -7,6 +7,7 @@
   var CURRENT_YEAR = new Date().getFullYear();
   var BUY_YEAR_MIN = 1990;
   var BUY_YEAR_MAX = CURRENT_YEAR + 1;
+  var DEFAULT_LOAN_YEARS = 30;
 
   var DEFAULT_RATES = {
     Poland: 7.5,
@@ -34,9 +35,6 @@
   var form = document.getElementById('estimate-form');
   var mortgageEl = document.getElementById('mortgage');
   var mortgageFields = document.getElementById('mortgage-fields');
-  var countryRateWrap = document.getElementById('country-rate-wrap');
-  var customRateWrap = document.getElementById('custom-rate-wrap');
-  var countryRateDisplay = document.getElementById('country_rate_display');
   var interestRateEl = document.getElementById('interest_rate');
   var submitBtn = document.getElementById('submit-btn');
   var resultEl = document.getElementById('result');
@@ -57,6 +55,7 @@
   var rates = Object.assign({}, DEFAULT_RATES);
   var searchTimer = null;
   var searchAbort = null;
+  var reverseAbort = null;
   var lastResults = [];
   var activeIndex = -1;
   var map = null;
@@ -124,16 +123,26 @@
     return checked ? checked.value : 'country';
   }
 
-  function updateCountryRateDisplay() {
+  function getCountryRate() {
     var country = getSelectedCountry();
     var rate = rates[country] != null ? rates[country] : DEFAULT_RATES.Other;
-    countryRateDisplay.value = String(rate);
+    return Number(rate);
+  }
+
+  function syncInterestRateField() {
+    if (getRateMode() === 'country') {
+      interestRateEl.readOnly = true;
+      interestRateEl.value = String(getCountryRate());
+    } else {
+      interestRateEl.readOnly = false;
+      if (interestRateEl.value === '' || interestRateEl.value == null) {
+        interestRateEl.value = String(getCountryRate());
+      }
+    }
   }
 
   function updateRateModeUI() {
-    var isCustom = getRateMode() === 'custom';
-    countryRateWrap.hidden = isCustom;
-    customRateWrap.hidden = !isCustom;
+    syncInterestRateField();
   }
 
   function updateMortgageUI() {
@@ -141,7 +150,6 @@
     mortgageFields.hidden = !on;
     if (on) {
       updateRateModeUI();
-      updateCountryRateDisplay();
     }
   }
 
@@ -240,7 +248,8 @@
     }
   }
 
-  function selectResult(item) {
+  function applyLocation(item, opts) {
+    opts = opts || {};
     if (!item) return;
 
     var lat = Number(item.lat);
@@ -262,11 +271,29 @@
       setCookie(COOKIE_NAME, country, COOKIE_DAYS);
     }
 
-    updateCountryRateDisplay();
-    setMarker(lat, lon, true);
-    closeResults();
-    setSearchStatus('');
-    addressQuery.value = display;
+    if (getRateMode() === 'country') {
+      syncInterestRateField();
+    }
+
+    if (opts.setMarker !== false) {
+      setMarker(lat, lon, opts.fly !== false);
+    }
+
+    if (opts.closeResults !== false) {
+      closeResults();
+    }
+
+    if (opts.clearStatus !== false) {
+      setSearchStatus('');
+    }
+
+    if (opts.updateQuery !== false) {
+      addressQuery.value = display;
+    }
+  }
+
+  function selectResult(item) {
+    applyLocation(item, { fly: true, setMarker: true });
   }
 
   async function searchNominatimDirect(q) {
@@ -354,7 +381,7 @@
     var ok = true;
 
     if (!addressDisplay.value.trim() || !form.lat.value || !form.lon.value) {
-      showFieldError('address', 'Выберите адрес из результатов поиска');
+      showFieldError('address', 'Выберите адрес поиском или кликом по карте');
       ok = false;
     }
 
@@ -385,18 +412,10 @@
     }
 
     if (mortgageEl.checked) {
-      var years = Number(form.loan_years.value);
-      if (!form.loan_years.value || !Number.isInteger(years) || years < 1) {
-        showFieldError('loan_years', 'Укажите срок в годах');
+      var rate = Number(interestRateEl.value);
+      if (interestRateEl.value === '' || !isFinite(rate) || rate < 0) {
+        showFieldError('interest_rate', 'Укажите ставку');
         ok = false;
-      }
-
-      if (getRateMode() === 'custom') {
-        var rate = Number(interestRateEl.value);
-        if (interestRateEl.value === '' || !isFinite(rate) || rate < 0) {
-          showFieldError('interest_rate', 'Укажите ставку');
-          ok = false;
-        }
       }
     }
 
@@ -409,11 +428,7 @@
     var interestRate = null;
 
     if (mortgage) {
-      if (rateMode === 'custom') {
-        interestRate = Number(interestRateEl.value);
-      } else {
-        interestRate = Number(countryRateDisplay.value);
-      }
+      interestRate = Number(interestRateEl.value);
     }
 
     var downPct = Number(form.down_payment_pct.value);
@@ -429,7 +444,7 @@
       lat: Number(form.lat.value),
       lon: Number(form.lon.value),
       mortgage: mortgage,
-      loan_years: mortgage ? Number(form.loan_years.value) : null,
+      loan_years: mortgage ? DEFAULT_LOAN_YEARS : null,
       interest_rate: interestRate,
       down_payment_pct: mortgage ? downPct : null,
       rate_mode: mortgage ? rateMode : null
@@ -498,6 +513,81 @@
     }
   }
 
+  async function reverseNominatimDirect(lat, lon) {
+    var url =
+      'https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=' +
+      encodeURIComponent(lat) +
+      '&lon=' +
+      encodeURIComponent(lon);
+    var res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: reverseAbort ? reverseAbort.signal : undefined
+    });
+    if (!res.ok) throw new Error('nominatim reverse ' + res.status);
+    return res.json();
+  }
+
+  async function reverseGeocode(lat, lon) {
+    if (reverseAbort) {
+      try {
+        reverseAbort.abort();
+      } catch (e) {}
+    }
+    reverseAbort = typeof AbortController !== 'undefined' ? new AbortController() : null;
+
+    setSearchStatus('Определяем адрес…');
+    if (mapHint) {
+      mapHint.hidden = false;
+      mapHint.textContent = 'Определяем адрес…';
+    }
+
+    try {
+      var data = null;
+
+      try {
+        var res = await fetch(
+          '/api/reverse?lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon),
+          {
+            headers: { Accept: 'application/json' },
+            signal: reverseAbort ? reverseAbort.signal : undefined
+          }
+        );
+
+        if (res.status === 404) {
+          data = await reverseNominatimDirect(lat, lon);
+        } else if (!res.ok) {
+          throw new Error('reverse ' + res.status);
+        } else {
+          data = await res.json();
+        }
+      } catch (apiErr) {
+        if (apiErr && apiErr.name === 'AbortError') return;
+        data = await reverseNominatimDirect(lat, lon);
+      }
+
+      if (!data || typeof data !== 'object') {
+        throw new Error('empty reverse');
+      }
+
+      // Normalize lat/lon onto the clicked point if missing
+      if (data.lat == null) data.lat = lat;
+      if (data.lon == null) data.lon = lon;
+
+      applyLocation(data, { fly: false, setMarker: true, clearStatus: true });
+      if (mapHint) {
+        mapHint.hidden = true;
+      }
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      setSearchStatus('Не удалось определить адрес по точке. Попробуйте ещё раз или найдите через поиск.', true);
+      if (mapHint) {
+        mapHint.hidden = false;
+        mapHint.textContent =
+          'Не удалось определить адрес. Кликните снова или воспользуйтесь поиском.';
+      }
+    }
+  }
+
   function initMap() {
     if (typeof L === 'undefined') {
       mapHint.textContent = 'Карта недоступна (Leaflet не загрузился).';
@@ -515,8 +605,17 @@
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    // Optional: click on map does nothing by default (search-only).
-    // Keep map interactive for pan/zoom only.
+    try {
+      map.getContainer().style.cursor = 'crosshair';
+    } catch (e) {}
+
+    map.on('click', function (e) {
+      if (!e || !e.latlng) return;
+      var lat = e.latlng.lat;
+      var lon = e.latlng.lng;
+      setMarker(lat, lon, false);
+      reverseGeocode(lat, lon);
+    });
 
     setTimeout(function () {
       try {
@@ -651,8 +750,8 @@
   initCountryFromCookie();
   initMap();
   updateMortgageUI();
-  updateCountryRateDisplay();
+  syncInterestRateField();
   loadMeta().then(function () {
-    updateCountryRateDisplay();
+    syncInterestRateField();
   });
 })();

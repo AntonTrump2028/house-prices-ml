@@ -49,7 +49,7 @@
 
         <div class="map-wrap card" aria-label="Карта">
           <div id="map" class="map" role="application" aria-label="Карта выбранного адреса"></div>
-          <p class="map__hint" id="map-hint">Выберите адрес из поиска — маркер появится на карте</p>
+          <p class="map__hint" id="map-hint">Найдите адрес поиском или кликните по карте — маркер появится на выбранной точке</p>
         </div>
       </div>
 
@@ -106,14 +106,7 @@
 
           <div class="mortgage-fields" id="mortgage-fields" hidden>
             <div class="field">
-              <label for="loan_years">Срок (лет)</label>
-              <input type="number" id="loan_years" name="loan_years"
-                     min="1" max="50" step="1" value="30" inputmode="numeric">
-              <p class="field__error" id="loan_years-error" hidden></p>
-            </div>
-
-            <div class="field">
-              <span class="field-label" id="rate-label">Ставка</span>
+              <span class="field-label" id="rate-label">Ставка ипотеки</span>
               <div class="segment" role="radiogroup" aria-labelledby="rate-label">
                 <label class="segment__option">
                   <input type="radio" name="rate_mode" value="country" checked>
@@ -125,16 +118,10 @@
                 </label>
               </div>
 
-              <div class="input-suffix" id="country-rate-wrap">
-                <input type="text" id="country_rate_display" readonly disabled
-                       aria-label="Ставка страны">
-                <span class="suffix" aria-hidden="true">%</span>
-              </div>
-
-              <div class="input-suffix" id="custom-rate-wrap" hidden>
+              <div class="input-suffix">
                 <input type="number" id="interest_rate" name="interest_rate"
                        min="0" max="100" step="0.01" inputmode="decimal"
-                       aria-label="Своя ставка">
+                       aria-labelledby="rate-label" readonly>
                 <span class="suffix" aria-hidden="true">%</span>
               </div>
               <p class="field__error" id="interest_rate-error" hidden></p>
