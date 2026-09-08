@@ -1,0 +1,21 @@
+﻿# data and heavy artifacts (regenerate locally)
+data/*.csv
+models/*.joblib
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# ide / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# scratch
+_readme_dump.txt
+_write_audit_fixes.py
+*.log
