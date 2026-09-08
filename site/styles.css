@@ -37,7 +37,7 @@ body {
   position: absolute;
   left: -9999px;
   top: 0;
-  z-index: 100;
+  z-index: 200;
   padding: 8px 12px;
   background: var(--accent);
   color: #fff;
@@ -50,31 +50,42 @@ body {
 }
 
 .page {
-  max-width: 760px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 32px 20px 48px;
+  padding: 16px 16px 40px;
+}
+
+@media (min-width: 900px) {
+  .page {
+    padding: 24px 24px 48px;
+  }
 }
 
 .header {
-  margin-bottom: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 20px;
 }
 
 .header__title {
-  margin: 0 0 6px;
-  font-size: clamp(28px, 4vw, 32px);
+  margin: 0 0 4px;
+  font-size: 28px;
   font-weight: 600;
   line-height: 1.25;
   color: var(--text);
 }
 
 .header__sub {
-  margin: 0 0 10px;
-  font-size: 15px;
+  margin: 0;
+  font-size: 14px;
   color: var(--text-muted);
 }
 
 .header__github {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--accent);
   text-decoration: none;
@@ -85,16 +96,94 @@ body {
   text-decoration: underline;
 }
 
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.layout__map-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  order: 1;
+}
+
+.layout__form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  order: 2;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .layout__form-col {
+    order: 1;
+    flex: 0 0 400px;
+    width: 400px;
+  }
+
+  .layout__map-col {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
 .card {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 20px;
 }
 
 .card--result {
-  margin-top: 20px;
   background: var(--bg-soft);
+}
+
+.search {
+  padding: 16px;
+}
+
+.map-wrap {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.map {
+  width: 100%;
+  height: 280px;
+  background: var(--bg-soft);
+  z-index: 1;
+}
+
+@media (min-width: 900px) {
+  .map {
+    height: 520px;
+    min-height: 480px;
+  }
+
+  .map-wrap {
+    flex: 1 1 auto;
+    min-height: 480px;
+  }
+}
+
+.map__hint {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border);
 }
 
 .form {
@@ -111,31 +200,90 @@ body {
 }
 
 .field label,
-.label-text {
+.field-label {
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
 }
 
 .field--checkbox {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .field-row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-@media (min-width: 640px) {
-  .field-row {
-    grid-template-columns: 1fr 1fr;
-  }
+.search__row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.search__row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search__results {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.search__results[hidden] {
+  display: none;
+}
+
+.search__item {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.search__item:last-child {
+  border-bottom: none;
+}
+
+.search__item:hover,
+.search__item:focus-visible {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.search__item[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.field__status {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.field__status--error {
+  color: var(--error);
 }
 
 input[type="text"],
 input[type="number"],
-input[type="date"],
+input[type="search"],
 select {
   width: 100%;
   padding: 10px 12px;
@@ -166,7 +314,7 @@ input:disabled,
 input[readonly] {
   background: var(--bg-soft);
   color: var(--text-muted);
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .input-suffix {
@@ -207,8 +355,8 @@ input[readonly] {
 .mortgage-fields {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 14px;
+  padding: 14px;
   background: var(--accent-soft);
   border-radius: 8px;
 }
@@ -265,7 +413,7 @@ input[readonly] {
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: 12px 20px;
+  padding: 10px 16px;
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -273,11 +421,12 @@ input[readonly] {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn--primary {
   width: 100%;
-  margin-top: 8px;
+  margin-top: 4px;
   color: #fff;
   background: var(--accent);
 }
@@ -291,16 +440,24 @@ input[readonly] {
   cursor: not-allowed;
 }
 
-@media (min-width: 640px) {
-  .btn--primary {
-    width: auto;
-    align-self: stretch;
-    min-width: 200px;
-  }
+.btn--secondary {
+  flex: 0 0 auto;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: #dceef8;
+  border-color: var(--accent);
+}
+
+.btn--secondary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .alert {
-  margin-top: 16px;
   padding: 12px 14px;
   font-size: 14px;
   color: var(--error);
@@ -323,6 +480,7 @@ input[readonly] {
   line-height: 1.15;
   color: var(--price);
   letter-spacing: -0.02em;
+  word-break: break-word;
 }
 
 .result__mortgage {
@@ -355,7 +513,7 @@ input[readonly] {
 }
 
 .footer {
-  margin-top: 32px;
+  margin-top: 28px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
@@ -364,6 +522,11 @@ input[readonly] {
   margin: 0;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+/* Leaflet tweaks */
+.leaflet-container {
+  font: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {

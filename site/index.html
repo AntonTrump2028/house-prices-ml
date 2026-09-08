@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,83 +18,102 @@
 
   <div class="page">
     <header class="header">
-      <h1 class="header__title">Калькулятор цены дома</h1>
-      <p class="header__sub">оценка на основе ML</p>
-      <a class="header__github" href="https://github.com/AntonTrump2028/house-prices-ml" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <div class="header__text">
+        <h1 class="header__title">Калькулятор цены дома</h1>
+        <p class="header__sub">ориентировочная оценка · ML</p>
+      </div>
+      <a class="header__github"
+         href="https://github.com/AntonTrump2028/house-prices-ml"
+         target="_blank"
+         rel="noopener noreferrer">GitHub</a>
     </header>
 
-    <main id="main">
-      <form class="card form" id="estimate-form" novalidate>
-        <div class="field">
-          <label for="country">Страна</label>
-          <select id="country" name="country" required>
-            <option value="Poland">Poland</option>
-            <option value="Germany">Germany</option>
-            <option value="USA">USA</option>
-            <option value="Ukraine">Ukraine</option>
-            <option value="Other">Other</option>
-          </select>
-          <p class="field__error" id="country-error" hidden></p>
-        </div>
+    <main id="main" class="layout">
+      <div class="layout__map-col">
+        <section class="search card" aria-label="Поиск адреса">
+          <label for="address-query" class="field-label">Адрес</label>
+          <div class="search__row">
+            <input type="search"
+                   id="address-query"
+                   name="address_query"
+                   autocomplete="off"
+                   placeholder="Улица, город, страна…"
+                   aria-autocomplete="list"
+                   aria-controls="search-results"
+                   aria-expanded="false">
+            <button type="button" class="btn btn--secondary" id="search-btn">Найти</button>
+          </div>
+          <p class="field__status" id="search-status" role="status" aria-live="polite" hidden></p>
+          <ul class="search__results" id="search-results" role="listbox" hidden></ul>
+        </section>
 
-        <div class="field">
-          <label for="city">Город</label>
-          <input type="text" id="city" name="city" autocomplete="address-level2" required>
-          <p class="field__error" id="city-error" hidden></p>
+        <div class="map-wrap card" aria-label="Карта">
+          <div id="map" class="map" role="application" aria-label="Карта выбранного адреса"></div>
+          <p class="map__hint" id="map-hint">Выберите адрес из поиска — маркер появится на карте</p>
         </div>
+      </div>
 
-        <div class="field">
-          <label for="address">Адрес / улица</label>
-          <input type="text" id="address" name="address" autocomplete="street-address" required>
-          <p class="field__error" id="address-error" hidden></p>
-        </div>
-
-        <div class="field">
-          <label for="buy_date">Дата покупки</label>
-          <input type="date" id="buy_date" name="buy_date" required>
-          <p class="field__error" id="buy_date-error" hidden></p>
-        </div>
-
-        <div class="field-row">
+      <div class="layout__form-col">
+        <form class="card form" id="estimate-form" novalidate>
           <div class="field">
-            <label for="living_area">Площадь</label>
-            <div class="input-suffix">
-              <input type="number" id="living_area" name="living_area" min="1" step="any" required>
-              <span class="suffix" aria-hidden="true">м²</span>
-            </div>
-            <p class="field__error" id="living_area-error" hidden></p>
+            <label for="address-display">Выбранный адрес</label>
+            <input type="text" id="address-display" name="address" readonly
+                   placeholder="Пока не выбран"
+                   aria-describedby="address-error">
+            <p class="field__error" id="address-error" hidden></p>
           </div>
 
+          <input type="hidden" id="lat" name="lat" value="">
+          <input type="hidden" id="lon" name="lon" value="">
+          <input type="hidden" id="city" name="city" value="">
+          <input type="hidden" id="country" name="country" value="">
+          <input type="hidden" id="country_code" name="country_code" value="">
+          <input type="hidden" id="down_payment_pct" name="down_payment_pct" value="20">
+
           <div class="field">
-            <label for="bedrooms">Комнаты</label>
-            <input type="number" id="bedrooms" name="bedrooms" min="1" step="1" required>
-            <p class="field__error" id="bedrooms-error" hidden></p>
+            <label for="buy_year">Год покупки</label>
+            <input type="number" id="buy_year" name="buy_year"
+                   min="1990" max="2030" step="1" placeholder="YYYY"
+                   inputmode="numeric" required>
+            <p class="field__error" id="buy_year-error" hidden></p>
           </div>
-        </div>
 
-        <div class="field">
-          <label for="year_built">Год постройки</label>
-          <input type="number" id="year_built" name="year_built" min="1800" max="2100" step="1" placeholder="YYYY" required>
-          <p class="field__error" id="year_built-error" hidden></p>
-        </div>
-
-        <div class="field field--checkbox">
-          <label class="checkbox">
-            <input type="checkbox" id="mortgage" name="mortgage">
-            <span>Учитывать ипотеку</span>
-          </label>
-        </div>
-
-        <div class="mortgage-fields" id="mortgage-fields" hidden>
           <div class="field-row">
             <div class="field">
+              <label for="living_area">Площадь</label>
+              <div class="input-suffix">
+                <input type="number" id="living_area" name="living_area"
+                       min="1" step="any" inputmode="decimal" required>
+                <span class="suffix" aria-hidden="true">м²</span>
+              </div>
+              <p class="field__error" id="living_area-error" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="bedrooms">Комнаты</label>
+              <input type="number" id="bedrooms" name="bedrooms"
+                     min="1" step="1" inputmode="numeric" required>
+              <p class="field__error" id="bedrooms-error" hidden></p>
+            </div>
+          </div>
+
+          <div class="field field--checkbox">
+            <label class="checkbox">
+              <input type="checkbox" id="mortgage" name="mortgage">
+              <span>Учитывать ипотеку</span>
+            </label>
+          </div>
+
+          <div class="mortgage-fields" id="mortgage-fields" hidden>
+            <div class="field">
               <label for="loan_years">Срок (лет)</label>
-              <input type="number" id="loan_years" name="loan_years" min="1" max="50" step="1">
+              <input type="number" id="loan_years" name="loan_years"
+                     min="1" max="50" step="1" value="30" inputmode="numeric">
               <p class="field__error" id="loan_years-error" hidden></p>
             </div>
 
             <div class="field">
-              <span class="label-text" id="rate-label">Ставка</span>
+              <span class="field-label" id="rate-label">Ставка</span>
               <div class="segment" role="radiogroup" aria-labelledby="rate-label">
                 <label class="segment__option">
                   <input type="radio" name="rate_mode" value="country" checked>
@@ -104,46 +126,52 @@
               </div>
 
               <div class="input-suffix" id="country-rate-wrap">
-                <input type="text" id="country_rate_display" readonly disabled aria-label="Ставка страны">
+                <input type="text" id="country_rate_display" readonly disabled
+                       aria-label="Ставка страны">
                 <span class="suffix" aria-hidden="true">%</span>
               </div>
 
               <div class="input-suffix" id="custom-rate-wrap" hidden>
-                <input type="number" id="interest_rate" name="interest_rate" min="0" max="100" step="0.01" aria-label="Своя ставка">
+                <input type="number" id="interest_rate" name="interest_rate"
+                       min="0" max="100" step="0.01" inputmode="decimal"
+                       aria-label="Своя ставка">
                 <span class="suffix" aria-hidden="true">%</span>
               </div>
               <p class="field__error" id="interest_rate-error" hidden></p>
             </div>
           </div>
-        </div>
 
-        <button type="submit" class="btn btn--primary" id="submit-btn">Рассчитать</button>
-      </form>
+          <button type="submit" class="btn btn--primary" id="submit-btn">Рассчитать</button>
+        </form>
 
-      <div class="alert" id="api-error" role="alert" hidden></div>
+        <div class="alert" id="api-error" role="alert" hidden></div>
 
-      <section class="card card--result" id="result" hidden aria-live="polite">
-        <p class="result__label">Оценка цены</p>
-        <p class="result__price" id="result-price"></p>
-        <div class="result__mortgage" id="result-mortgage" hidden>
-          <div class="result__row">
-            <span>Первый взнос</span>
-            <strong id="result-down"></strong>
+        <section class="card card--result" id="result" hidden aria-live="polite">
+          <p class="result__label">Оценка цены</p>
+          <p class="result__price" id="result-price"></p>
+          <div class="result__mortgage" id="result-mortgage" hidden>
+            <div class="result__row">
+              <span>Первый взнос</span>
+              <strong id="result-down"></strong>
+            </div>
+            <div class="result__row">
+              <span>Ежемесячный платёж</span>
+              <strong id="result-monthly"></strong>
+            </div>
           </div>
-          <div class="result__row">
-            <span>Ежемесячный платёж</span>
-            <strong id="result-monthly"></strong>
-          </div>
-        </div>
-        <p class="result__note">ориентировочно · модель RF</p>
-      </section>
+          <p class="result__note">ориентировочно</p>
+        </section>
+      </div>
     </main>
 
     <footer class="footer">
-      <p>Оценка ориентировочная и не является офертой.</p>
+      <p>Оценка ориентировочная и не является офертой. Данные OpenStreetMap не содержат цен продажи.</p>
     </footer>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
   <script src="app.js" defer></script>
 </body>
 </html>
