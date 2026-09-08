@@ -129,6 +129,7 @@ a:hover {
   background: var(--bg);
 }
 
+/* Nav */
 .nav {
   position: sticky;
   top: 0;
@@ -165,6 +166,7 @@ a:hover {
   color: var(--accent);
 }
 
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -206,6 +208,7 @@ a:hover {
   border-color: var(--accent-hover);
 }
 
+/* Hero */
 .hero {
   padding-block: 72px 64px;
 }
@@ -238,6 +241,7 @@ a:hover {
   gap: 12px;
 }
 
+/* Stages — vertical list, icon left */
 .stages__list {
   list-style: none;
   margin: 0;
@@ -288,6 +292,7 @@ a:hover {
   max-width: 52ch;
 }
 
+/* Price card */
 .price-card__head {
   display: flex;
   flex-wrap: wrap;
@@ -337,6 +342,7 @@ a:hover {
   letter-spacing: -0.02em;
 }
 
+/* Stack chips */
 .chips {
   list-style: none;
   margin: 0;
@@ -359,6 +365,7 @@ a:hover {
   border: 1px solid transparent;
 }
 
+/* Footer */
 .footer {
   border-top: 1px solid var(--border);
   padding-block: 64px;
@@ -386,6 +393,7 @@ a:hover {
   color: var(--text-muted);
 }
 
+/* Responsive */
 @media (max-width: 767px) {
   .container {
     padding-inline: 16px;

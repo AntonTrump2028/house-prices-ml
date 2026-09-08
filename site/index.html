@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -54,9 +54,13 @@
             <div class="stage__body">
               <p class="stage__num">1. Фундамент</p>
               <h3 class="stage__title">Данные и очистка</h3>
-              <p class="stage__text">Взяли датасет Ames Housing: пропуски, выбросы, подготовка под обучение — без сюрпризов на валидации.</p>
+              <p class="stage__text">
+                Взяли датасет Ames Housing: пропуски в признаках, выбросы по цене и площади,
+                аккуратная подготовка под обучение — без «сырых» сюрпризов на валидации.
+              </p>
             </div>
           </li>
+
           <li class="stage card">
             <div class="stage__icon" aria-hidden="true">
               <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,9 +75,14 @@
             <div class="stage__body">
               <p class="stage__num">2. Стены</p>
               <h3 class="stage__title">Признаки, EDA, модели</h3>
-              <p class="stage__text">Распределения, корреляции, категориальные признаки. Линейная регрессия рядом со случайным лесом — где линейной уже не хватает.</p>
+              <p class="stage__text">
+                Разбор распределений, корреляций и категориальных признаков.
+                Базовая линейная регрессия рядом со случайным лесом — чтобы увидеть,
+                где линейной модели уже не хватает.
+              </p>
             </div>
           </li>
+
           <li class="stage card">
             <div class="stage__icon" aria-hidden="true">
               <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -88,9 +97,13 @@
             <div class="stage__body">
               <p class="stage__num">3. Крыша</p>
               <h3 class="stage__title">Тюнинг и проверка</h3>
-              <p class="stage__text">Гиперпараметры случайного леса, контроль переобучения. MAE, RMSE и R² — выбираем модель, которая держит качество.</p>
+              <p class="stage__text">
+                Подбор гиперпараметров случайного леса, кросс-валидация и контроль переобучения.
+                Сравниваем MAE, RMSE и R² — выбираем модель, которая держит качество стабильно.
+              </p>
             </div>
           </li>
+
           <li class="stage card">
             <div class="stage__icon" aria-hidden="true">
               <svg viewBox="0 0 120 120" width="140" height="140" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -108,7 +121,10 @@
             <div class="stage__body">
               <p class="stage__num">4. Ключи / сдача</p>
               <h3 class="stage__title">Дом готов — смотрим оценку</h3>
-              <p class="stage__text">Модель собрана, метрики посчитаны. Ниже — итоговая «цена» качества на отложенной выборке.</p>
+              <p class="stage__text">
+                Модель собрана, метрики посчитаны. Ниже — итоговая «цена» качества:
+                насколько близко предсказание к реальной стоимости на отложенной выборке.
+              </p>
             </div>
           </li>
         </ol>
@@ -157,11 +173,10 @@
 
   <footer class="footer section">
     <div class="container footer__inner">
-      <p class="footer__text">Код и эксперименты — в репозитории на GitHub.</p>
-      <p class="footer__copy">House Prices · Ames Housing · портфолио-кейс</p>
+      <p class="footer__text">Код и ноутбук на GitHub</p>
       <a class="btn btn--primary" href="https://github.com/AntonTrump2028/house-prices-ml" target="_blank" rel="noopener noreferrer">Открыть репозиторий →</a>
+      <p class="footer__copy">© Anton</p>
     </div>
   </footer>
 </body>
 </html>
-
