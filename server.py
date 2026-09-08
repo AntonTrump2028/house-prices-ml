@@ -1,4 +1,4 @@
-﻿"""House price calculator API — demo estimates, not live bank/comps."""
+"""House price calculator API — demo estimates, not live bank/comps."""
 from __future__ import annotations
 
 import json
@@ -19,7 +19,11 @@ GEO_PATH = APP_DIR / "geo_coeffs.json"
 RATES_PATH = APP_DIR / "rates.json"
 SITE_DIR = ROOT / "site"
 
+# UI uses m2; Ames GrLivArea is sq ft
+M2_TO_SQFT = 10.7639
+
 app = Flask(__name__, static_folder=None)
+
 
 @app.after_request
 def _cors(resp):
@@ -35,6 +39,29 @@ _rates = json.loads(RATES_PATH.read_text(encoding="utf-8"))
 _bundle = None
 _medians = None
 _features = None
+
+
+def _norm_country(raw: str | None) -> str:
+    if not raw:
+        return "USA"
+    s = str(raw).strip()
+    aliases = {
+        "US": "USA",
+        "UNITED STATES": "USA",
+        "PL": "Poland",
+        "DE": "Germany",
+        "UA": "Ukraine",
+        "GB": "Other",
+        "UK": "Other",
+    }
+    up = s.upper()
+    if up in aliases:
+        return aliases[up]
+    # exact keys in rates
+    for k in _rates:
+        if k.lower() == s.lower():
+            return k
+    return s if s in _rates else "Other"
 
 
 def _load_or_train():
@@ -71,8 +98,7 @@ def _load_or_train():
         print("saved quick model:", MODEL_PATH)
 
 
-def _qual_heuristic(year_built: int, living_area: float) -> int:
-    # map age + size into Ames-like OverallQual 1-10
+def _qual_heuristic(year_built: int, living_sqft: float) -> int:
     age = max(0, date.today().year - int(year_built))
     q = 5
     if age < 10:
@@ -83,107 +109,99 @@ def _qual_heuristic(year_built: int, living_area: float) -> int:
         q -= 1
     elif age > 90:
         q -= 2
-    if living_area >= 2200:
+    if living_sqft >= 2200:
         q += 2
-    elif living_area >= 1600:
+    elif living_sqft >= 1600:
         q += 1
-    elif living_area < 900:
+    elif living_sqft < 900:
         q -= 1
     return int(np.clip(q, 1, 10))
 
 
-def _row_from_form(body: dict) -> pd.DataFrame:
+def _row_from_form(living_sqft: float, beds: int, year: int) -> pd.DataFrame:
     _load_or_train()
-    living = float(body.get("living_area") or 1200)
-    beds = int(body.get("bedrooms") or 3)
-    year = int(body.get("year_built") or 1995)
-    qual = _qual_heuristic(year, living)
-
+    qual = _qual_heuristic(year, living_sqft)
     row = {f: float(_medians.get(f, 0.0)) for f in _features}
-
     mapped = {
         "OverallQual": qual,
-        "GrLivArea": living,
+        "GrLivArea": living_sqft,
         "BedroomAbvGr": beds,
         "YearBuilt": year,
         "YearRemodAdd": max(year, int(_medians.get("YearRemodAdd", year))),
         "GarageYrBlt": year,
-        "1stFlrSF": living * 0.7,
-        "2ndFlrSF": living * 0.3 if beds >= 3 else 0.0,
-        "TotalBsmtSF": living * 0.55,
+        "1stFlrSF": living_sqft * 0.7,
+        "2ndFlrSF": living_sqft * 0.3 if beds >= 3 else 0.0,
+        "TotalBsmtSF": living_sqft * 0.55,
         "FullBath": max(1, min(beds - 1, 3)),
         "TotRmsAbvGrd": max(beds + 2, 4),
-        "GarageCars": 2 if living >= 1100 else 1,
-        "GarageArea": 480 if living >= 1100 else 280,
-        "LotArea": max(living * 6.5, 4000),
+        "GarageCars": 2 if living_sqft >= 1100 else 1,
+        "GarageArea": 480 if living_sqft >= 1100 else 280,
+        "LotArea": max(living_sqft * 6.5, 4000),
     }
     for k, v in mapped.items():
         if k in row:
             row[k] = float(v)
-
     return pd.DataFrame([[row[f] for f in _features]], columns=_features)
 
 
 def _geo_mult(country: str, city: str) -> float:
-    c = (country or "US").upper()
-    base = float(_geo["countries"].get(c, _geo["countries"]["US"]).get("base", 1.0))
-    cities = _geo["cities"].get(c, {})
+    meta_c = _geo["countries"].get(country, _geo["countries"].get("USA", {}))
+    base = float(meta_c.get("base", 1.0))
+    cities = _geo["cities"].get(country, {})
     city_key = (city or "").strip()
     city_m = float(cities.get(city_key, cities.get("default", 1.0)))
     return base * city_m
 
 
 def _inflate(buy_date_str: str | None) -> float:
-    # 0.25%/month from buy_date toward today, capped at +/- 30%
     if not buy_date_str:
         return 1.0
     try:
-        bd = datetime.strptime(buy_date_str[:10], "%Y-%m-%d").date()
+        bd = datetime.strptime(str(buy_date_str)[:10], "%Y-%m-%d").date()
     except ValueError:
         return 1.0
     today = date.today()
     months = (today.year - bd.year) * 12 + (today.month - bd.month)
-    # if buy_date in future, slight deflation of estimate for "today dollars"
     factor = 1.0 + 0.0025 * months
     return float(np.clip(factor, 0.7, 1.3))
 
 
-def _mortgage(price: float, country: str, years: int, down_pct: float, rate_override=None):
-    c = (country or "US").upper()
-    info = _rates.get(c, _rates["US"])
-    annual = float(rate_override if rate_override is not None else info["annual_rate_pct"])
+def _mortgage(price: float, country: str, years: int, down_pct: float, annual_rate: float):
+    info = _rates.get(country, _rates["USA"])
     down = price * (down_pct / 100.0)
     principal = max(price - down, 0.0)
     n = max(int(years), 1) * 12
-    r = annual / 100.0 / 12.0
-    if r <= 0:
-        monthly = principal / n
+    r = float(annual_rate) / 100.0 / 12.0
+    if r <= 0 or n <= 0:
+        monthly = principal / max(n, 1)
     else:
         monthly = principal * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
     return {
         "down_payment": round(down, 2),
         "loan_amount": round(principal, 2),
         "monthly_payment": round(monthly, 2),
-        "annual_rate_pct": annual,
+        "annual_rate_pct": float(annual_rate),
         "loan_years": int(years),
         "currency": info.get("currency", "USD"),
         "symbol": info.get("symbol", "$"),
     }
 
 
-@app.get("/api/meta")
+@app.route("/api/meta", methods=["GET", "OPTIONS"])
 def meta():
+    if request.method == "OPTIONS":
+        return ("", 204)
     _load_or_train()
+    rates_flat = {k: float(v["annual_rate_pct"]) for k, v in _rates.items()}
     countries = []
     for code, meta_c in _geo["countries"].items():
-        cities = sorted(
-            [k for k in _geo["cities"].get(code, {}) if k != "default"]
-        )
+        cities = sorted([k for k in _geo["cities"].get(code, {}) if k != "default"])
         rate = _rates.get(code, {})
         countries.append(
             {
                 "code": code,
-                "label": meta_c["label"],
+                "name": code,
+                "label": meta_c.get("label", code),
                 "currency": meta_c.get("currency", rate.get("currency", "USD")),
                 "symbol": rate.get("symbol", "$"),
                 "default_rate_pct": rate.get("annual_rate_pct"),
@@ -193,41 +211,68 @@ def meta():
     return jsonify(
         {
             "countries": countries,
-            "default_country": "US",
+            "rates": rates_flat,
+            "default_country": "USA",
             "cookie_suggestion": {"name": "hp_country", "max_age_days": 365},
-            "disclaimer": "Estimates use a trained model plus static geo/rate tables — not live bank quotes or address comps.",
+            "area_unit": "m2",
+            "disclaimer": (
+                "Estimates use a trained model plus static geo/rate tables — "
+                "not live bank quotes or address comps."
+            ),
         }
     )
 
 
-@app.post("/api/estimate")
+@app.route("/api/estimate", methods=["POST", "OPTIONS"])
 def estimate():
+    if request.method == "OPTIONS":
+        return ("", 204)
     _load_or_train()
     body = request.get_json(force=True, silent=True) or {}
 
-    country = (body.get("country") or "US").upper()
-    city = body.get("city") or ""
-    address = body.get("address") or ""
+    country = _norm_country(body.get("country"))
+    city = (body.get("city") or "").strip()
+    address = (body.get("address") or "").strip()
     buy_date = body.get("buy_date")
-    living = float(body.get("living_area") or 0)
+    living_m2 = float(body.get("living_area") or 0)
     beds = int(body.get("bedrooms") or 0)
     year = int(body.get("year_built") or 0)
     use_mortgage = bool(body.get("mortgage"))
     loan_years = int(body.get("loan_years") or 30)
     down_pct = float(body.get("down_payment_pct") or 20)
-    rate_override = body.get("rate_pct")
 
-    if living <= 0 or beds <= 0 or year < 1800:
+    # rate: interest_rate from UI, else rate_pct, else country default
+    rate_info = _rates.get(country, _rates["USA"])
+    annual = float(rate_info["annual_rate_pct"])
+    if body.get("interest_rate") is not None and body.get("interest_rate") != "":
+        try:
+            annual = float(body["interest_rate"])
+        except (TypeError, ValueError):
+            pass
+    elif body.get("rate_pct") is not None and body.get("rate_pct") != "":
+        try:
+            annual = float(body["rate_pct"])
+        except (TypeError, ValueError):
+            pass
+
+    if living_m2 <= 0 or beds <= 0 or year < 1800:
         return jsonify({"error": "living_area, bedrooms, year_built required"}), 400
 
-    X = _row_from_form(body)
+    living_sqft = living_m2 * M2_TO_SQFT
+    X = _row_from_form(living_sqft, beds, year)
     raw_pred = float(_bundle["model"].predict(X)[0])
     g = _geo_mult(country, city)
     inf = _inflate(buy_date)
     price = raw_pred * g * inf
 
+    currency = rate_info.get("currency", "USD")
+
     out = {
+        # UI picks estimate / price / predicted_price / prediction
+        "estimate": round(price, 2),
+        "price": round(price, 2),
         "estimated_price": round(price, 2),
+        "currency": currency,
         "base_model_price": round(raw_pred, 2),
         "geo_multiplier": round(g, 4),
         "inflation_factor": round(inf, 4),
@@ -235,19 +280,25 @@ def estimate():
         "city": city,
         "address": address,
         "inputs": {
-            "living_area": living,
+            "living_area_m2": living_m2,
+            "living_area_sqft": round(living_sqft, 1),
             "bedrooms": beds,
             "year_built": year,
             "buy_date": buy_date,
-            "overall_qual_heuristic": _qual_heuristic(year, living),
+            "overall_qual_heuristic": _qual_heuristic(year, living_sqft),
         },
-        "disclaimer": "Demo estimate from config tables + Ames RF model — not a live appraisal or bank offer.",
+        "disclaimer": (
+            "Demo estimate from config tables + Ames RF model — "
+            "not a live appraisal or bank offer."
+        ),
     }
 
     if use_mortgage:
-        out["mortgage"] = _mortgage(
-            price, country, loan_years, down_pct, rate_override
-        )
+        m = _mortgage(price, country, loan_years, down_pct, annual)
+        out["mortgage"] = m
+        # top-level aliases for the shipped site UI
+        out["down_payment"] = m["down_payment"]
+        out["monthly_payment"] = m["monthly_payment"]
     else:
         out["mortgage"] = None
 
@@ -259,14 +310,10 @@ def index():
     return send_from_directory(SITE_DIR, "index.html")
 
 
-@app.get("/site/<path:path>")
-def site_files(path):
-    return send_from_directory(SITE_DIR, path)
-
-
 @app.get("/<path:path>")
 def root_static(path):
-    # serve site assets when opened via Flask
+    if path.startswith("api/"):
+        return jsonify({"error": "not found"}), 404
     target = SITE_DIR / path
     if target.is_file():
         return send_from_directory(SITE_DIR, path)
@@ -277,5 +324,3 @@ if __name__ == "__main__":
     _load_or_train()
     print("API http://127.0.0.1:5000  |  site via same origin")
     app.run(host="127.0.0.1", port=5000, debug=False)
-
-

@@ -1,7 +1,7 @@
-﻿{
-  "US": {"annual_rate_pct": 6.8, "currency": "USD", "symbol": "$"},
-  "PL": {"annual_rate_pct": 7.2, "currency": "PLN", "symbol": "zl"},
-  "DE": {"annual_rate_pct": 3.9, "currency": "EUR", "symbol": "€"},
-  "GB": {"annual_rate_pct": 4.8, "currency": "GBP", "symbol": "£"},
-  "UA": {"annual_rate_pct": 15.0, "currency": "UAH", "symbol": "₴"}
+{
+  "Poland": {"annual_rate_pct": 7.5, "currency": "PLN", "symbol": "zl"},
+  "Germany": {"annual_rate_pct": 3.8, "currency": "EUR", "symbol": "€"},
+  "USA": {"annual_rate_pct": 6.8, "currency": "USD", "symbol": "$"},
+  "Ukraine": {"annual_rate_pct": 18.0, "currency": "UAH", "symbol": "₴"},
+  "Other": {"annual_rate_pct": 8.0, "currency": "USD", "symbol": "$"}
 }

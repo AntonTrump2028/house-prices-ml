@@ -1,4 +1,4 @@
-﻿# House Price Calculator
+# House Price Calculator
 
 ML-powered demo that estimates a home price from basic property details, then optionally shows down payment and monthly mortgage payment.
 
@@ -6,18 +6,19 @@ Not a live bank API and not live address comps — geo multipliers and interest 
 
 ## Features
 
-- Web calculator UI (`site/`) — white / blue (`#2B7BBF`)
+- Calculator UI (`site/`) — white / blue (`#2B7BBF`)
 - `POST /api/estimate` — price + optional mortgage
-- `GET /api/meta` — countries, cities, default rates, cookie hint (`hp_country`)
-- Country cookie remembered in the browser
-- Best-effort mapping of form fields onto Ames numeric features; missing features filled with train medians
+- `GET /api/meta` — countries, default rates, cookie hint (`hp_country`)
+- Country remembered via `hp_country` cookie
+- Form living area is **m²** (converted to sq ft for the Ames model)
+- Best-effort mapping onto Ames numeric features; other features filled with train medians
 - Simple buy-date inflation (~0.25%/month, capped)
 
 ## Requirements
 
 - Python 3.11
-- Local data: `data/train_clean.csv` (or raw `train.csv` + pipeline scripts)
-- Optional: `models/rf_house_prices_best.joblib` (trained if missing)
+- Local data: `data/train_clean.csv`
+- Optional: `models/rf_house_prices_best.joblib` (a smaller RF is trained at startup if missing)
 
 ## Install
 
@@ -31,16 +32,14 @@ pip install -r requirements.txt
 python server.py
 ```
 
-Open http://127.0.0.1:5000/ in your browser.
+Open http://127.0.0.1:5000/
 
 API examples:
 
 ```bash
 curl http://127.0.0.1:5000/api/meta
 
-curl -X POST http://127.0.0.1:5000/api/estimate ^
-  -H "Content-Type: application/json" ^
-  -d "{\"country\":\"PL\",\"city\":\"Warsaw\",\"address\":\"Example 1\",\"buy_date\":\"2026-01-15\",\"living_area\":1400,\"bedrooms\":3,\"year_built\":2008,\"mortgage\":true,\"loan_years\":25,\"down_payment_pct\":20}"
+curl -X POST http://127.0.0.1:5000/api/estimate -H "Content-Type: application/json" -d "{\"country\":\"Poland\",\"city\":\"Warsaw\",\"address\":\"Example 1\",\"buy_date\":\"2026-01-15\",\"living_area\":85,\"bedrooms\":3,\"year_built\":2008,\"mortgage\":true,\"loan_years\":25,\"interest_rate\":7.5,\"down_payment_pct\":20}"
 ```
 
 ## Regenerate data / model
@@ -48,16 +47,16 @@ curl -X POST http://127.0.0.1:5000/api/estimate ^
 CSV and large `.joblib` files are gitignored.
 
 1. Put Kaggle `train.csv` / `test.csv` into `data/`
-2. Run cleaning + training:
+2. Run:
 
 ```bash
 python 03_clean.py
 python 08_tune_forest.py
 ```
 
-If `models/rf_house_prices_best.joblib` is absent, `server.py` trains a smaller RF on `data/train_clean.csv` at startup.
+If `models/rf_house_prices_best.joblib` is absent, `server.py` trains a quick RF on `data/train_clean.csv` at startup.
 
-## Project layout
+## Layout
 
 ```text
 server.py              Flask API + static site
