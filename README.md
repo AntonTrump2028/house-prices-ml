@@ -13,7 +13,7 @@ python server.py
 
 Open http://127.0.0.1:5000/
 
-Needs Python 3.11 and `data/train_clean.csv` locally (Kaggle Ames train → `03_clean.py`). The model file under `models/` is optional; the server can train a fallback on startup.
+Needs Python 3.11 and local `data/train_clean.csv` (from Kaggle Ames `train.csv` via `03_clean.py`). A model under `models/` is optional; the server can train a fallback on startup.
 
 ## Stack
 
